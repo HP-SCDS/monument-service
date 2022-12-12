@@ -1,5 +1,9 @@
 namespace MonumentService
 {
+    using Microsoft.Extensions.DependencyInjection;
+    using MonumentService.Repository;
+    using System.Reflection;
+
     public class Program
     {
         public static void Main(string[] args)
@@ -13,6 +17,15 @@ namespace MonumentService
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Services.AddW3CLogging(logging => {
+                logging.LoggingFields = Microsoft.AspNetCore.HttpLogging.W3CLoggingFields.All;
+                logging.FileName = "access.log";
+                logging.LogDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "logs");
+            });
+
+            // our own dependencies
+            builder.Services.AddSingleton<IMonumentRepository, MonumentRepository>();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -24,11 +37,21 @@ namespace MonumentService
 
             app.UseHttpsRedirection();
 
+            // for this service, allow EVERYTHING so it can be called from any application
+            // TODO: test this
+            app.UseCors(b => b.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+
             app.UseAuthorization();
 
-            app.UseHttpLogging();
+            app.UseW3CLogging();
 
             app.MapControllers();
+
+            // register disposals
+            app.Lifetime.ApplicationStopped.Register(() =>
+            {
+                (app.Services.GetService<IMonumentRepository>() as IDisposable)?.Dispose();
+            });
 
             app.Run();
         }
