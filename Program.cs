@@ -1,6 +1,7 @@
 namespace MonumentService
 {
     using Microsoft.Extensions.DependencyInjection;
+    using MonumentService.Refresher;
     using MonumentService.Repository;
     using System.Reflection;
 
@@ -20,11 +21,12 @@ namespace MonumentService
             builder.Services.AddW3CLogging(logging => {
                 logging.LoggingFields = Microsoft.AspNetCore.HttpLogging.W3CLoggingFields.All;
                 logging.FileName = "access.log";
-                logging.LogDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "logs");
+                logging.LogDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? ".", "logs");
             });
 
             // our own dependencies
             builder.Services.AddSingleton<IMonumentRepository, MonumentRepository>();
+            builder.Services.AddSingleton<IMonumentRefresher, MonumentRefresher>();
 
             var app = builder.Build();
 
@@ -47,12 +49,9 @@ namespace MonumentService
 
             app.MapControllers();
 
-            // register disposals
-            app.Lifetime.ApplicationStopped.Register(() =>
-            {
-                (app.Services.GetService<IMonumentRepository>() as IDisposable)?.Dispose();
-            });
-
+            // start refresher
+            app.Lifetime.ApplicationStarted.Register(() => app.Services.GetService<IMonumentRefresher>()?.Start());
+            
             app.Run();
         }
     }

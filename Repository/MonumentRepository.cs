@@ -7,7 +7,7 @@
 
     public class MonumentRepository : IMonumentRepository, IDisposable
     {
-        private static readonly string MonumentsDatabase = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "monuments.db");
+        private static readonly string MonumentsDatabase = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? ".", "monuments.db");
         private const string CollectionName = "monuments";
 
         private readonly ILogger m_logger;

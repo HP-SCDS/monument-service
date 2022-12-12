@@ -8,7 +8,7 @@
     [Route("monuments")]
     public class MonumentController : Controller
     {
-        private readonly ILogger<MonumentController> m_logger;
+        private readonly ILogger m_logger;
         private readonly IMonumentRepository m_repository;
 
         public MonumentController(ILogger<MonumentController> logger, IMonumentRepository repository)
