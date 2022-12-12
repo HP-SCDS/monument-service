@@ -17,11 +17,25 @@
             m_repository = repository;
         }
 
-        [HttpGet(Name = "")]
+        [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<Monument> GetAll()
         {
             return m_repository.GetAll();
+        }
+
+        [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult<Monument> GetById(int id)
+        {
+            Monument? monument = m_repository.Get(m => m.Id == id).FirstOrDefault();
+            if (monument == null)
+            {
+                return NotFound();
+            }
+
+            return monument;
         }
     }
 }
