@@ -26,6 +26,7 @@ namespace MonumentService
 
             app.UseAuthorization();
 
+            app.UseHttpLogging();
 
             app.MapControllers();
 
