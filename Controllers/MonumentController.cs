@@ -37,5 +37,33 @@
 
             return monument;
         }
+
+        [HttpGet("provincia/{provincia}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IEnumerable<Monument> GetByProvincia(string provincia)
+        {
+            return m_repository.Get(m => m.Provincia == provincia);
+        }
+
+        [HttpGet("tipo-monumento/{tipo}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IEnumerable<Monument> GetByTipoMonumento(string tipo)
+        {
+            return m_repository.Get(m => m.TipoMonumento == tipo);
+        }
+
+        [HttpGet("tipo-construccion/{tipo}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IEnumerable<Monument> GetByTipoConstruccion(string tipo)
+        {
+            return m_repository.Get(m => m.TipoConstruccion == tipo);
+        }
+
+        [HttpGet("clasificacion/{clasificacion}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IEnumerable<Monument> GetByClasificacion(string clasificacion)
+        {
+            return m_repository.Get(m => m.Clasificacion == clasificacion);
+        }
     }
 }
