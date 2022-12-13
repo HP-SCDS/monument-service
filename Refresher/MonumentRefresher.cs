@@ -20,11 +20,13 @@
 
         private readonly ILogger m_logger;
         private readonly IMonumentRepository m_monumentRepository;
+        private readonly IFacetsRepository m_facetsRepository;
 
-        public MonumentRefresher(ILogger<MonumentRefresher> logger, IMonumentRepository monumentRepository)
+        public MonumentRefresher(ILogger<MonumentRefresher> logger, IMonumentRepository monumentRepository, IFacetsRepository facetsRepository)
         {
             m_logger = logger;
             m_monumentRepository = monumentRepository;
+            m_facetsRepository = facetsRepository;
 
             m_timerEventHandler = async (_, _) => await RefreshMonuments();
 
@@ -36,9 +38,15 @@
             m_logger.LogInformation("Monument refresher started");
 
             // force a refresh if no monuments
-            if (!m_monumentRepository.GetAll().Any())
+            int monumentCount = m_monumentRepository.GetAll().Count();
+            if (monumentCount <= 0)
             {
+                m_logger.LogInformation("No monuments found in database, refresh forced");
                 RefreshMonuments().Wait();
+            }
+            else
+            {
+                m_logger.LogInformation($"Found {monumentCount} monuments in database, no refresh needed");
             }
 
             m_timer.Elapsed += m_timerEventHandler;
@@ -82,6 +90,7 @@
                                 m_logger.LogInformation($"{monuments.Count} monuments parsed correctly from API");
 
                                 SaveMonuments(monuments);
+                                SaveFacets(monuments);
 
                                 success = true;
                             }
@@ -151,7 +160,7 @@
                 Localizacion = location,
                 TipoMonumento = source.TipoMonumento,
                 TipoConstruccion = source.TipoConstruccion,
-                Clasificacion = source.TipoConstruccion,
+                Clasificacion = source.Clasificacion,
                 PeriodosHistoricos = periodos
             };
         }
@@ -160,6 +169,29 @@
         {
             int monumentsInserted = m_monumentRepository.AddOrUpdate(monuments.ToArray());
             m_logger.LogInformation($"{monumentsInserted} monuments added or updated to repository");
+        }
+
+        private void SaveFacets(IList<Monument> monuments)
+        {
+            int provinciasInserted = m_facetsRepository.AddOrUpdateProvincias(monuments
+                .Select(m => m.Provincia).Where(p => p != null).Cast<string>().Distinct().ToArray());
+            m_logger.LogInformation($"{provinciasInserted} provincias added or updated to repository");
+
+            int tiposMonumentoInserted = m_facetsRepository.AddOrUpdateTiposMonumento(monuments
+                .Select(m => m.TipoMonumento).Where(t => t != null).Cast<string>().Distinct().ToArray());
+            m_logger.LogInformation($"{tiposMonumentoInserted} tipos monumento added or updated to repository");
+
+            int tiposConstruccionInserted = m_facetsRepository.AddOrUpdateTiposConstruccion(monuments
+                .Select(m => m.TipoConstruccion).Where(t => t != null).Cast<string>().Distinct().ToArray());
+            m_logger.LogInformation($"{tiposConstruccionInserted} tipos construccion added or updated to repository");
+
+            int clasificacionesInserted = m_facetsRepository.AddOrUpdateClasificaciones(monuments
+                .Select(m => m.Clasificacion).Where(c => c != null).Cast<string>().Distinct().ToArray());
+            m_logger.LogInformation($"{clasificacionesInserted} clasificaciones added or updated to repository");
+
+            int periodosHistoricosInserted = m_facetsRepository.AddOrUpdatePeriodosHistoricos(monuments
+                .Where(m => m.PeriodosHistoricos != null).SelectMany(m => m.PeriodosHistoricos).Where(p => p != null).Cast<string>().Distinct().ToArray());
+            m_logger.LogInformation($"{periodosHistoricosInserted} periodos historicos added or updated to repository");
         }
 
         #region IDisposable

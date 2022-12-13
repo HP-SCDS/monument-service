@@ -65,5 +65,12 @@
         {
             return m_repository.Get(m => m.Clasificacion == clasificacion);
         }
+
+        [HttpGet("periodo-historico/{periodo}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IEnumerable<Monument> GetByPeriodoHistorico(string periodo)
+        {
+            return m_repository.Get(m => m.PeriodosHistoricos != null && m.PeriodosHistoricos.Contains(periodo));
+        }
     }
 }

@@ -26,6 +26,7 @@ namespace MonumentService
 
             // our own dependencies
             builder.Services.AddSingleton<IMonumentRepository, MonumentRepository>();
+            builder.Services.AddSingleton<IFacetsRepository, FacetsRepository>();
             builder.Services.AddSingleton<IMonumentRefresher, MonumentRefresher>();
 
             var app = builder.Build();
