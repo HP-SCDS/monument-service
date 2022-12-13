@@ -89,12 +89,16 @@
                             {
                                 m_logger.LogInformation($"Found {monumentsJCyL.Count} monuments at API");
 
-                                IList<Monument> monuments = monumentsJCyL.Select(ConvertMonument).Where(m => m != null).Cast<Monument>().ToList();
+                                List<Monument> monuments = monumentsJCyL.Select(ConvertMonument).Where(m => m != null).Cast<Monument>().ToList();
                                 m_logger.LogInformation($"{monuments.Count} monuments parsed correctly from API");
 
-                                SaveMonuments(monuments);
                                 SaveFacets(monuments);
                                 await SaveImages(monuments);
+
+                                // update monuments with image existence before saving them
+                                monuments.ForEach(m => m.HasImage = m_imageManager.MonumentHasImage(m.Id));
+
+                                SaveMonuments(monuments);
 
                                 success = true;
                             }

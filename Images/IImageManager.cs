@@ -9,5 +9,7 @@
         Task<bool> SaveImageForMonument(Monument monument);
 
         byte[]? GetImageForMonument(int id);
+
+        bool MonumentHasImage(int id);
     }
 }

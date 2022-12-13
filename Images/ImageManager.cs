@@ -91,5 +91,12 @@
 
             return File.ReadAllBytes(imagePath);
         }
+
+        public bool MonumentHasImage(int id)
+        {
+            string imageName = $"{id}.jpg";
+            string imagePath = Path.Combine(ImagesDirectory, imageName);
+            return File.Exists(imagePath);
+        }
     }
 }

@@ -32,5 +32,7 @@
         public string? Clasificacion { get; set; }
 
         public IEnumerable<string> PeriodosHistoricos { get; set; } = new List<string>();
+
+        public bool HasImage { get; set; } = false;
     }
 }
