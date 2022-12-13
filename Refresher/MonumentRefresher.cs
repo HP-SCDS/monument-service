@@ -1,8 +1,8 @@
 ﻿namespace MonumentService.Refresher
 {
     using MonumentService.Model;
+    using MonumentService.Repository;
     using Newtonsoft.Json.Linq;
-    using System.Security.Cryptography.Xml;
     using System.Timers;
     using Timer = System.Timers.Timer;
 
@@ -19,10 +19,12 @@
         private readonly HttpClient m_client = new HttpClient();
 
         private readonly ILogger m_logger;
+        private readonly IMonumentRepository m_monumentRepository;
 
-        public MonumentRefresher(ILogger<MonumentRefresher> logger)
+        public MonumentRefresher(ILogger<MonumentRefresher> logger, IMonumentRepository monumentRepository)
         {
             m_logger = logger;
+            m_monumentRepository = monumentRepository;
 
             m_timerEventHandler = async (_, _) => await RefreshMonuments();
 
@@ -33,8 +35,11 @@
         {
             m_logger.LogInformation("Monument refresher started");
 
-            // force a refresh
-            RefreshMonuments().Wait();
+            // force a refresh if no monuments
+            if (!m_monumentRepository.GetAll().Any())
+            {
+                RefreshMonuments().Wait();
+            }
 
             m_timer.Elapsed += m_timerEventHandler;
             m_timer.Start();
@@ -76,6 +81,8 @@
                                 IList<Monument> monuments = monumentsJCyL.Select(ConvertMonument).Where(m => m != null).Cast<Monument>().ToList();
                                 m_logger.LogInformation($"{monuments.Count} monuments parsed correctly from API");
 
+                                SaveMonuments(monuments);
+
                                 success = true;
                             }
                         }
@@ -103,6 +110,7 @@
         {
             if (source == null || source.Identificador == null)
             {
+                m_logger.LogWarning($"Monument ${source} is not valid, skipping conversion");
                 return null;
             }
 
@@ -146,6 +154,12 @@
                 Clasificacion = source.TipoConstruccion,
                 PeriodosHistoricos = periodos
             };
+        }
+        
+        private void SaveMonuments(IList<Monument> monuments)
+        {
+            int monumentsInserted = m_monumentRepository.AddOrUpdate(monuments.ToArray());
+            m_logger.LogInformation($"{monumentsInserted} monuments added or updated to repository");
         }
 
         #region IDisposable

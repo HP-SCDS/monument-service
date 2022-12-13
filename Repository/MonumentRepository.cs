@@ -32,16 +32,22 @@
             return collection.Find(filter);
         }
 
-        public void Add(params Monument[] itemsToAdd)
+        public int Add(params Monument[] itemsToAdd)
         {
             ILiteCollection<Monument> collection = m_database.GetCollection<Monument>(CollectionName);
-            collection.InsertBulk(itemsToAdd);
+            return collection.Insert(itemsToAdd);
         }
 
-        public void Update(params Monument[] itemsToUpdate)
+        public int Update(params Monument[] itemsToUpdate)
         {
             ILiteCollection<Monument> collection = m_database.GetCollection<Monument>(CollectionName);
-            collection.Update(itemsToUpdate);
+            return collection.Update(itemsToUpdate);
+        }
+
+        public int AddOrUpdate(params Monument[] itemsToUpdate)
+        {
+            ILiteCollection<Monument> collection = m_database.GetCollection<Monument>(CollectionName);
+            return collection.Upsert(itemsToUpdate);
         }
 
         public int Delete(params Monument[] itemsToDelete)

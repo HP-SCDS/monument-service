@@ -9,9 +9,11 @@
 
         IEnumerable<Monument> Get(Expression<Func<Monument, bool>> filter);
 
-        void Add(params Monument[] itemsToAdd);
+        int Add(params Monument[] itemsToAdd);
 
-        void Update(params Monument[] itemsToUpdate);
+        int Update(params Monument[] itemsToUpdate);
+
+        int AddOrUpdate(params Monument[] itemsToUpdate);
 
         int Delete(params Monument[] itemsToDelete);
 
