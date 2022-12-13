@@ -1,18 +1,151 @@
 ﻿namespace MonumentService.Refresher
 {
+    using MonumentService.Model;
+    using Newtonsoft.Json.Linq;
+    using System.Security.Cryptography.Xml;
+    using System.Timers;
+    using Timer = System.Timers.Timer;
+
     public class MonumentRefresher : IMonumentRefresher, IDisposable
     {
+        private const string MonumentsUrl = "https://analisis.datosabiertos.jcyl.es/api/records/1.0/search/?dataset=relacion-monumentos&q=&rows=-1&facet=tipomonumento&facet=clasificacion&facet=tipoconstruccion&facet=periodohistorico&facet=poblacion_provincia";
+        private const int RefreshMinutes = 720; // 12 hours
+
+        private readonly Timer m_timer = new Timer(RefreshMinutes * 60 * 1000);
+        private readonly ManualResetEvent m_refreshEvent = new ManualResetEvent(true);
+        private bool m_refreshStopped;
+        private readonly ElapsedEventHandler m_timerEventHandler;
+
+        private readonly HttpClient m_client = new HttpClient();
+
         private readonly ILogger m_logger;
 
         public MonumentRefresher(ILogger<MonumentRefresher> logger)
         {
             m_logger = logger;
+
+            m_timerEventHandler = async (_, _) => await RefreshMonuments();
+
             m_logger.LogInformation("Monument refresher initialized");
         }
 
         public void Start()
         {
             m_logger.LogInformation("Monument refresher started");
+
+            // force a refresh
+            RefreshMonuments().Wait();
+
+            m_timer.Elapsed += m_timerEventHandler;
+            m_timer.Start();
+        }
+
+        private async Task RefreshMonuments()
+        {
+            lock (m_refreshEvent)
+            {
+                m_refreshEvent.WaitOne();
+                m_refreshEvent.Reset();
+            }
+
+            if (m_refreshStopped)
+            {
+                return;
+            }
+
+            m_logger.LogInformation("Refreshing monuments...");
+
+            bool success = false;
+
+            try
+            {
+                HttpResponseMessage response = await m_client.GetAsync(MonumentsUrl);
+                if (response.IsSuccessStatusCode)
+                {
+                    string content = await response.Content.ReadAsStringAsync();
+                    if (!string.IsNullOrEmpty(content))
+                    {
+                        JToken? records = JObject.Parse(content).SelectToken("records");
+                        if (records != null)
+                        {
+                            IList<MonumentJCyL> monumentsJCyL = records.Select(record => record.SelectToken("fields")?.ToObject<MonumentJCyL>()).Where(m => m != null).Cast<MonumentJCyL>().ToList();
+                            if (monumentsJCyL != null && monumentsJCyL.Any())
+                            {
+                                m_logger.LogInformation($"Found {monumentsJCyL.Count} monuments at API");
+
+                                IList<Monument> monuments = monumentsJCyL.Select(ConvertMonument).Where(m => m != null).Cast<Monument>().ToList();
+                                m_logger.LogInformation($"{monuments.Count} monuments parsed correctly from API");
+
+                                success = true;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                m_logger.LogError(ex, "Error refreshing monuments");
+            }
+
+            if (success)
+            {
+                m_logger.LogInformation("Monuments refreshed correctly");
+            }
+            else
+            {
+                m_logger.LogError("Monuments not refreshed correctly!");
+            }
+
+            m_refreshEvent.Set();
+        }
+
+        private Monument? ConvertMonument(MonumentJCyL source)
+        {
+            if (source == null || source.Identificador == null)
+            {
+                return null;
+            }
+
+            Location? location = null;
+            if (source.Coordenadas_Longitud != null && source.Coordenadas_Latitud != null)
+            {
+                location = new Location
+                {
+                    Longitud = source.Coordenadas_Longitud.Value,
+                    Latitud = source.Coordenadas_Latitud.Value
+                };
+            }
+
+            List<string> periodos = new List<string>();
+            if (source.PeriodoHistorico != null)
+            {
+                string[] splitPeriodos = source.PeriodoHistorico.Split(';');
+                periodos.AddRange(splitPeriodos);
+            }
+
+            int? bienInteresCultural = null;
+            if (int.TryParse(source.IdentificadorBienInteresCultural, out int bienInteresCulturalParsed))
+            {
+                bienInteresCultural = bienInteresCulturalParsed;
+            }
+
+            return new Monument
+            {
+                Id = source.Identificador.Value,
+                IdBienCultural = bienInteresCultural,
+                Nombre = source.Nombre,
+                Descripcion = source.Descripcion,
+                Calle = source.Calle,
+                CodigoPostal = source.CodigoPostal,
+                Localidad = source.Poblacion_Localidad,
+                Municipio = source.Poblacion_Municipio,
+                Provincia = source.Poblacion_Provincia,
+                Localizacion = location,
+                TipoMonumento = source.TipoMonumento,
+                TipoConstruccion = source.TipoConstruccion,
+                Clasificacion = source.TipoConstruccion,
+                PeriodosHistoricos = periodos
+            };
         }
 
         #region IDisposable
@@ -25,6 +158,18 @@
             {
                 return;
             }
+
+            m_timer.Elapsed -= m_timerEventHandler;
+            m_timer.Stop();
+
+            lock (m_refreshEvent)
+            {
+                m_refreshEvent.WaitOne();
+                m_refreshStopped = true;
+            }
+
+            m_timer.Dispose();
+            m_refreshEvent.Dispose();
 
             m_logger.LogInformation("Monument refresher finalized");
 
