@@ -7,5 +7,7 @@
         void Start();
 
         Task<bool> SaveImageForMonument(Monument monument);
+
+        byte[]? GetImageForMonument(int id);
     }
 }

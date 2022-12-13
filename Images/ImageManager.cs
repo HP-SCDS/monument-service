@@ -2,6 +2,7 @@
 {
     using MonumentService.Model;
     using System.Reflection;
+    using System.Reflection.Metadata;
 
     public class ImageManager : IImageManager
     {
@@ -34,7 +35,7 @@
                 return false;
             }
 
-            string imageName = $"{monument.IdBienCultural}.jpg";
+            string imageName = $"{monument.Id}.jpg";
             string imagePath = Path.Combine(ImagesDirectory, imageName);
             if (File.Exists(imagePath))
             {
@@ -49,7 +50,7 @@
                     // the service for images returns a 200 instead of a 404 when the image is not found
                     if (response.Content.Headers.ContentLength <= 0)
                     {
-                        m_logger.LogDebug($"Image for monument {monument.IdBienCultural} not found");
+                        m_logger.LogDebug($"Image for monument {monument.Id} ({monument.IdBienCultural}) not found");
                         return false;
                     }
 
@@ -66,17 +67,29 @@
                 }
                 else
                 {
-                    m_logger.LogDebug($"Failed to download image for monument {monument.IdBienCultural} (maybe not found if they fixed their status codes)");
+                    m_logger.LogDebug($"Failed to download image for monument {monument.Id} ({monument.IdBienCultural}) (maybe not found if they fixed their status codes)");
                     return false;
                 }
             }
             catch (Exception ex)
             {
-                m_logger.LogError(ex, $"Error getting image for monument {monument.IdBienCultural}");
+                m_logger.LogError(ex, $"Error getting image for monument {monument.Id} ({monument.IdBienCultural})");
                 return false;
             }
 
             return true;
+        }
+
+        public byte[]? GetImageForMonument(int id)
+        {
+            string imageName = $"{id}.jpg";
+            string imagePath = Path.Combine(ImagesDirectory, imageName);
+            if (!File.Exists(imagePath))
+            {
+                return null;
+            }
+
+            return File.ReadAllBytes(imagePath);
         }
     }
 }

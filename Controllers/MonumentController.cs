@@ -1,8 +1,10 @@
 ﻿namespace MonumentService.Controllers
 {
     using Microsoft.AspNetCore.Mvc;
+    using MonumentService.Images;
     using MonumentService.Model;
     using MonumentService.Repository;
+    using System.Reflection.Metadata;
 
     [ApiController]
     [Route("monuments")]
@@ -10,11 +12,13 @@
     {
         private readonly ILogger m_logger;
         private readonly IMonumentRepository m_repository;
+        private readonly IImageManager m_imageManager;
 
-        public MonumentController(ILogger<MonumentController> logger, IMonumentRepository repository)
+        public MonumentController(ILogger<MonumentController> logger, IMonumentRepository repository, IImageManager imageManager)
         {
             m_logger = logger;
             m_repository = repository;
+            m_imageManager = imageManager;
         }
 
         [HttpGet]
@@ -71,6 +75,20 @@
         public IEnumerable<Monument> GetByPeriodoHistorico(string periodo)
         {
             return m_repository.Get(m => m.PeriodosHistoricos != null && m.PeriodosHistoricos.Contains(periodo));
+        }
+
+        [HttpGet("{id}/image")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult GetImage(int id)
+        {
+            byte[]? imageData = m_imageManager.GetImageForMonument(id);
+            if (imageData == null)
+            {
+                return NotFound();
+            }
+
+            return File(imageData, "image/jpeg");
         }
     }
 }
