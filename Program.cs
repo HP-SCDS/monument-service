@@ -1,6 +1,7 @@
 namespace MonumentService
 {
     using Microsoft.Extensions.DependencyInjection;
+    using MonumentService.Images;
     using MonumentService.Refresher;
     using MonumentService.Repository;
     using System.Reflection;
@@ -28,6 +29,7 @@ namespace MonumentService
             builder.Services.AddSingleton<IMonumentRepository, MonumentRepository>();
             builder.Services.AddSingleton<IFacetsRepository, FacetsRepository>();
             builder.Services.AddSingleton<IMonumentRefresher, MonumentRefresher>();
+            builder.Services.AddSingleton<IImageManager, ImageManager>();
 
             var app = builder.Build();
 
@@ -50,8 +52,12 @@ namespace MonumentService
 
             app.MapControllers();
 
-            // start refresher
-            app.Lifetime.ApplicationStarted.Register(() => app.Services.GetService<IMonumentRefresher>()?.Start());
+            // start images manager and refresher
+            app.Lifetime.ApplicationStarted.Register(() =>
+            {
+                app.Services.GetService<IImageManager>()?.Start();
+                app.Services.GetService<IMonumentRefresher>()?.Start();
+            });
             
             app.Run();
         }

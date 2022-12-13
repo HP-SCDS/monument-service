@@ -1,5 +1,6 @@
 ﻿namespace MonumentService.Refresher
 {
+    using MonumentService.Images;
     using MonumentService.Model;
     using MonumentService.Repository;
     using Newtonsoft.Json.Linq;
@@ -21,12 +22,14 @@
         private readonly ILogger m_logger;
         private readonly IMonumentRepository m_monumentRepository;
         private readonly IFacetsRepository m_facetsRepository;
+        private readonly IImageManager m_imageManager;
 
-        public MonumentRefresher(ILogger<MonumentRefresher> logger, IMonumentRepository monumentRepository, IFacetsRepository facetsRepository)
+        public MonumentRefresher(ILogger<MonumentRefresher> logger, IMonumentRepository monumentRepository, IFacetsRepository facetsRepository, IImageManager imageManager)
         {
             m_logger = logger;
             m_monumentRepository = monumentRepository;
             m_facetsRepository = facetsRepository;
+            m_imageManager = imageManager;
 
             m_timerEventHandler = async (_, _) => await RefreshMonuments();
 
@@ -91,6 +94,7 @@
 
                                 SaveMonuments(monuments);
                                 SaveFacets(monuments);
+                                await SaveImages(monuments);
 
                                 success = true;
                             }
@@ -192,6 +196,12 @@
             int periodosHistoricosInserted = m_facetsRepository.AddOrUpdatePeriodosHistoricos(monuments
                 .Where(m => m.PeriodosHistoricos != null).SelectMany(m => m.PeriodosHistoricos).Where(p => p != null).Cast<string>().Distinct().ToArray());
             m_logger.LogInformation($"{periodosHistoricosInserted} periodos historicos added or updated to repository");
+        }
+
+        private async Task SaveImages(IList<Monument> monuments)
+        {
+            int imagesSaved = (await Task.WhenAll(monuments.Select(async m => await m_imageManager.SaveImageForMonument(m)))).Where(r => r).Count();
+            m_logger.LogInformation($"{imagesSaved} images saved for {monuments.Count} monuments");
         }
 
         #region IDisposable
