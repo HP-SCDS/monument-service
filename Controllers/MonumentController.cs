@@ -4,6 +4,7 @@
     using MonumentService.Images;
     using MonumentService.Model;
     using MonumentService.Repository;
+    using Swashbuckle.AspNetCore.Annotations;
 
     [ApiController]
     [Route("monuments")]
@@ -23,6 +24,7 @@
         }
 
         [HttpGet]
+        [SwaggerOperation(Description = "Obtiene todos los monumentos disponibles. Esta operación puede llevar un tiempo significativo. **Se recomienda el uso de otras operaciones de obtención de monumentos**.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<Monument> GetAll()
         {
@@ -30,6 +32,7 @@
         }
 
         [HttpGet("{id}")]
+        [SwaggerOperation(Description = "Obtiene un monumento con un ID concreto. Si no se encuentra, se devuelve un código 404.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<Monument> GetById(int id)
@@ -44,6 +47,7 @@
         }
 
         [HttpGet("search/{query}")]
+        [SwaggerOperation(Description = "Busca monumentos, contemplando la inclusión de la cadena de búsqueda en nombre o descripción. No distingue entre mayúsculas y minúsculas.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<Monument> Search(string? query)
         {
@@ -57,6 +61,7 @@
         }
 
         [HttpGet("provincia/{provincia}")]
+        [SwaggerOperation(Description = "Obtiene monumentos de una provincia concreta. Se puede utilizar el endpoint de *facets* para obtener las provincias. No distingue entre mayúsculas y minúsculas.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<Monument> GetByProvincia(string provincia)
         {
@@ -64,6 +69,7 @@
         }
 
         [HttpGet("municipio/{municipio}")]
+        [SwaggerOperation(Description = "Obtiene monumentos de un municipio concreto. No distingue entre mayúsculas y minúsculas.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<Monument> GetByMunicipio(string municipio)
         {
@@ -71,6 +77,7 @@
         }
         
         [HttpGet("localidad/{localidad}")]
+        [SwaggerOperation(Description = "Obtiene monumentos de una localidad concreta. No distingue entre mayúsculas y minúsculas.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<Monument> GetByLocalidad(string localidad)
         {
@@ -78,6 +85,7 @@
         }
 
         [HttpGet("codigo-postal/{cp}")]
+        [SwaggerOperation(Description = "Obtiene monumentos en un código postal concreto.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<Monument> GetByCodigoPostal(string cp)
         {
@@ -85,6 +93,7 @@
         }
 
         [HttpGet("tipo-monumento/{tipo}")]
+        [SwaggerOperation(Description = "Obtiene monumentos de un tipo concreto. Se puede utilizar el endpoint de *facets* para obtener los tipos. No distingue entre mayúsculas y minúsculas.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<Monument> GetByTipoMonumento(string tipo)
         {
@@ -92,6 +101,7 @@
         }
 
         [HttpGet("tipo-construccion/{tipo}")]
+        [SwaggerOperation(Description = "Obtiene monumentos con un tipo de construcción concreto. Se puede utilizar el endpoint de *facets* para obtener los tipos. No distingue entre mayúsculas y minúsculas.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<Monument> GetByTipoConstruccion(string tipo)
         {
@@ -99,6 +109,7 @@
         }
 
         [HttpGet("clasificacion/{clasificacion}")]
+        [SwaggerOperation(Description = "Obtiene monumentos de una clasificación concreta. Se puede utilizar el endpoint de *facets* para obtener las clasificaciones. No distingue entre mayúsculas y minúsculas.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<Monument> GetByClasificacion(string clasificacion)
         {
@@ -106,6 +117,7 @@
         }
 
         [HttpGet("periodo-historico/{periodo}")]
+        [SwaggerOperation(Description = "Obtiene monumentos enmarcados en un periodo histórico concreto. Se puede utilizar el endpoint de *facets* para obtener los periodos históricos. No distingue entre mayúsculas y minúsculas.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<Monument> GetByPeriodoHistorico(string periodo)
         {
@@ -113,6 +125,7 @@
         }
 
         [HttpGet("{id}/image")]
+        [SwaggerOperation(Description = "Devuelve la imagen para un monumento con un ID concreto. Si no se encuentra el monumento o su imagen, se devuelve un código 404.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetImage(int id)
@@ -127,6 +140,7 @@
         }
 
         [HttpGet("nearby")]
+        [SwaggerOperation(Description = "Obtiene monumentos cercanos a un punto concreto. Debe especificarse latitud y longitud y la distancia. La distancia se expresa en **kilómetros**.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<Monument> GetNearby(double latitude, double longitude, double distance)
         {

@@ -2,6 +2,7 @@
 {
     using Microsoft.AspNetCore.Mvc;
     using MonumentService.Repository;
+    using Swashbuckle.AspNetCore.Annotations;
 
     [ApiController]
     [Route("facets")]
@@ -17,6 +18,7 @@
         }
 
         [HttpGet("provincias")]
+        [SwaggerOperation(Description = "Obtiene una lista de todas las provincias con monumentos asociados.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<string> GetProvincias()
         {
@@ -24,6 +26,7 @@
         }
 
         [HttpGet("tipos-monumento")]
+        [SwaggerOperation(Description = "Obtiene una lista de todos los tipos de monumentos.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<string> GetTiposMonumento()
         {
@@ -31,6 +34,7 @@
         }
 
         [HttpGet("tipos-construccion")]
+        [SwaggerOperation(Description = "Obtiene una lista de todos los tipos de construcción para los monumentos.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<string> GetTiposConstruccion()
         {
@@ -38,6 +42,7 @@
         }
 
         [HttpGet("clasificaciones")]
+        [SwaggerOperation(Description = "Obtiene una lista de todas las clasificaciones de los monumentos.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<string> GetClasificaciones()
         {
@@ -45,6 +50,7 @@
         }
 
         [HttpGet("periodos-historicos")]
+        [SwaggerOperation(Description = "Obtiene una lista de todos los periodos históricos con monumentos asociados.")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<string> GetPeriodosHistoricos()
         {
