@@ -43,11 +43,45 @@
             return monument;
         }
 
+        [HttpGet("search/{query}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IEnumerable<Monument> Search(string? query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return m_repository.GetAll();
+            }
+
+            return m_repository.Get(m => (m.Nombre != null && m.Nombre.Contains(query, StringComparison.OrdinalIgnoreCase))
+                || (m.Descripcion != null && m.Descripcion.Contains(query, StringComparison.OrdinalIgnoreCase)));
+        }
+
         [HttpGet("provincia/{provincia}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<Monument> GetByProvincia(string provincia)
         {
             return m_repository.Get(m => m.Provincia == provincia);
+        }
+
+        [HttpGet("municipio/{municipio}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IEnumerable<Monument> GetByMunicipio(string municipio)
+        {
+            return m_repository.Get(m => m.Municipio == municipio);
+        }
+        
+        [HttpGet("localidad/{localidad}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IEnumerable<Monument> GetByLocalidad(string localidad)
+        {
+            return m_repository.Get(m => m.Localidad == localidad);
+        }
+
+        [HttpGet("codigo-postal/{cp}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IEnumerable<Monument> GetByCodigoPostal(string cp)
+        {
+            return m_repository.Get(m => m.CodigoPostal == cp);
         }
 
         [HttpGet("tipo-monumento/{tipo}")]
