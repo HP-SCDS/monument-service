@@ -4,7 +4,9 @@
     using MonumentService.Model;
     using MonumentService.Repository;
     using Newtonsoft.Json.Linq;
+    using System.Text.RegularExpressions;
     using System.Timers;
+    using System.Web;
     using Timer = System.Timers.Timer;
 
     public class MonumentRefresher : IMonumentRefresher, IDisposable
@@ -159,7 +161,7 @@
                 Id = source.Identificador.Value,
                 IdBienCultural = bienInteresCultural,
                 Nombre = source.Nombre,
-                Descripcion = source.Descripcion,
+                Descripcion = StripHtml(source.Descripcion),
                 Calle = source.Calle,
                 CodigoPostal = source.CodigoPostal,
                 Localidad = source.Poblacion_Localidad,
@@ -206,6 +208,20 @@
         {
             int imagesSaved = (await Task.WhenAll(monuments.Select(async m => await m_imageManager.SaveImageForMonument(m)))).Where(r => r).Count();
             m_logger.LogInformation($"{imagesSaved} images saved for {monuments.Count} monuments");
+        }
+
+        private static string? StripHtml(string? html)
+        {
+            if (string.IsNullOrEmpty(html))
+            {
+                return html;
+            }
+
+            // replace tags
+            string stripped = Regex.Replace(html, "<[^>]+>", "");
+
+            // use the HtmlDecode method to decode HTML entities and return the result
+            return HttpUtility.HtmlDecode(stripped);
         }
 
         #region IDisposable
