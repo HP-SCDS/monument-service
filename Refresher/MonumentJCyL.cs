@@ -20,9 +20,9 @@
 
         public string? Poblacion_Provincia { get; set; }
 
-        public double? Coordenadas_Longitud { get; set; }
-
         public double? Coordenadas_Latitud { get; set; }
+
+        public double? Coordenadas_Longitud { get; set; }
 
         public string? TipoMonumento { get; set; }
 

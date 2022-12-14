@@ -136,8 +136,8 @@
             {
                 location = new Location
                 {
-                    Longitud = source.Coordenadas_Longitud.Value,
-                    Latitud = source.Coordenadas_Latitud.Value
+                    Latitud = source.Coordenadas_Latitud.Value,
+                    Longitud = source.Coordenadas_Longitud.Value
                 };
             }
 
