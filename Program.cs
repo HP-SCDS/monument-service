@@ -19,11 +19,12 @@ namespace MonumentService
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c => c.EnableAnnotations());
 
-            builder.Services.AddW3CLogging(logging => {
+            /*builder.Services.AddW3CLogging(logging =>
+            {
                 logging.LoggingFields = Microsoft.AspNetCore.HttpLogging.W3CLoggingFields.All;
                 logging.FileName = "access.log";
                 logging.LogDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? ".", "logs");
-            });
+            });*/
 
             // our own dependencies
             builder.Services.AddSingleton<IMonumentRepository, MonumentRepository>();
@@ -48,7 +49,7 @@ namespace MonumentService
 
             app.UseAuthorization();
 
-            app.UseW3CLogging();
+            //app.UseW3CLogging();
 
             app.MapControllers();
 
