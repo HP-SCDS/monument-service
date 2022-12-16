@@ -2,13 +2,17 @@
 {
     using LiteDB;
     using MonumentService.Model;
-    using System.Linq.Expressions;
+    using MonumentService.Util;
     using System.Reflection;
 
     public class MonumentRepository : IMonumentRepository, IDisposable
     {
         private static readonly string MonumentsDatabase = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? ".", "monuments.db");
         private const string CollectionName = "monuments";
+
+        // SpinLocks can't be readonly, check https://stackoverflow.com/a/11225279 for details
+        private SpinLock m_slock = new();
+        private IList<Monument> m_monumentsCache = new List<Monument>();
 
         private readonly ILogger m_logger;
         private readonly LiteDatabase m_database;
@@ -18,6 +22,9 @@
             m_logger = logger;
             m_database = new LiteDatabase(new ConnectionString { Filename = MonumentsDatabase });
 
+            // warmup the cache
+            UpdateCache();
+
             m_logger.LogInformation($"Monuments database initialized at {MonumentsDatabase}");
         }
 
@@ -26,39 +33,33 @@
             return Get(_ => true);
         }
 
-        public IEnumerable<Monument> Get(Expression<Func<Monument, bool>> filter)
+        public IEnumerable<Monument> Get(Func<Monument, bool> filter)
         {
-            ILiteCollection<Monument> collection = m_database.GetCollection<Monument>(CollectionName);
-            return collection.Find(filter);
-        }
-
-        public int Add(params Monument[] itemsToAdd)
-        {
-            ILiteCollection<Monument> collection = m_database.GetCollection<Monument>(CollectionName);
-            return collection.Insert(itemsToAdd);
-        }
-
-        public int Update(params Monument[] itemsToUpdate)
-        {
-            ILiteCollection<Monument> collection = m_database.GetCollection<Monument>(CollectionName);
-            return collection.Update(itemsToUpdate);
+            return SyncHelper.OperationWithLock(ref m_slock, () => m_monumentsCache.Where(filter));
         }
 
         public int AddOrUpdate(params Monument[] itemsToUpdate)
         {
             ILiteCollection<Monument> collection = m_database.GetCollection<Monument>(CollectionName);
-            return collection.Upsert(itemsToUpdate);
+            int result = collection.Upsert(itemsToUpdate);
+
+            UpdateCache();
+
+            return result;
         }
 
-        public int Delete(params Monument[] itemsToDelete)
+        private void UpdateCache()
         {
-            return Delete(item => itemsToDelete.Contains(item));
-        }
-
-        public int Delete(Expression<Func<Monument, bool>> filter)
-        {
-            ILiteCollection<Monument> collection = m_database.GetCollection<Monument>(CollectionName);
-            return collection.DeleteMany(filter);
+            SyncHelper.OperationWithLock(ref m_slock, () =>
+            {
+                ILiteCollection<Monument> collection = m_database.GetCollection<Monument>(CollectionName);
+                IList<Monument> monuments = collection.FindAll().ToList();
+                if (monuments.Any())
+                {
+                    m_monumentsCache = monuments;
+                    m_logger.LogInformation($"Monuments cache updated with {m_monumentsCache.Count} monuments");
+                }
+            });
         }
 
         #region IDisposable
