@@ -10,10 +10,6 @@
         private static readonly string MonumentsDatabase = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location) ?? ".", "monuments.db");
         private const string CollectionName = "monuments";
 
-        // SpinLocks can't be read-only (see https://stackoverflow.com/a/11225279)
-        // This is needed because of bugs in LiteDB that cause 500 on multi-threading
-        private SpinLock m_slock = new();
-
         private readonly ILogger m_logger;
         private readonly LiteDatabase m_database;
 
@@ -33,25 +29,25 @@
         public IEnumerable<Monument> Get(Expression<Func<Monument, bool>> filter)
         {
             ILiteCollection<Monument> collection = m_database.GetCollection<Monument>(CollectionName);
-            return SyncHelper.OperationWithSpinLock(ref m_slock, () => collection.Find(filter));
+            return collection.Find(filter);
         }
 
         public int Add(params Monument[] itemsToAdd)
         {
             ILiteCollection<Monument> collection = m_database.GetCollection<Monument>(CollectionName);
-            return SyncHelper.OperationWithSpinLock(ref m_slock, () => collection.Insert(itemsToAdd));
+            return collection.Insert(itemsToAdd);
         }
 
         public int Update(params Monument[] itemsToUpdate)
         {
             ILiteCollection<Monument> collection = m_database.GetCollection<Monument>(CollectionName);
-            return SyncHelper.OperationWithSpinLock(ref m_slock, () => collection.Update(itemsToUpdate));
+            return collection.Update(itemsToUpdate);
         }
 
         public int AddOrUpdate(params Monument[] itemsToUpdate)
         {
             ILiteCollection<Monument> collection = m_database.GetCollection<Monument>(CollectionName);
-            return SyncHelper.OperationWithSpinLock(ref m_slock, () => collection.Upsert(itemsToUpdate));
+            return collection.Upsert(itemsToUpdate);
         }
 
         public int Delete(params Monument[] itemsToDelete)
@@ -62,7 +58,7 @@
         public int Delete(Expression<Func<Monument, bool>> filter)
         {
             ILiteCollection<Monument> collection = m_database.GetCollection<Monument>(CollectionName);
-            return SyncHelper.OperationWithSpinLock(ref m_slock, () => collection.DeleteMany(filter));
+            return collection.DeleteMany(filter);
         }
 
         #region IDisposable
