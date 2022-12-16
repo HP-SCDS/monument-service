@@ -30,6 +30,15 @@
             return m_repository.GetAll();
         }
 
+        [HttpGet("base")]
+        [SwaggerOperation(Description = "Obtiene todos los monumentos disponibles, pero sólo con los datos básicos. Esta operación es más rápida que la operación de obtención de todos los monumentos.")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IEnumerable<MonumentBase> GetAllBase()
+        {
+            // we need a proper cast here to the base class, using Cast<MonumentBase> is not enough
+            return m_repository.GetAll().Select(m => (MonumentBase)m);
+        }
+
         [HttpGet("{id}")]
         [SwaggerOperation(Description = "Obtiene un monumento con un ID concreto. Si no se encuentra, se devuelve un código 404.")]
         [ProducesResponseType(StatusCodes.Status200OK)]

@@ -2,14 +2,19 @@
 {
     using LiteDB;
 
-    public class Monument
+    public class MonumentBase
     {
         [BsonId]
-        public int Id {  get; set; }
-
-        public int? IdBienCultural { get; set; }
+        public int Id { get; set; }
 
         public string? Nombre { get; set; }
+
+        public bool HasImage { get; set; } = false;
+    }
+
+    public class Monument : MonumentBase
+    {
+        public int? IdBienCultural { get; set; }
 
         public string? Descripcion { get; set; }
 
@@ -32,7 +37,5 @@
         public string? Clasificacion { get; set; }
 
         public IEnumerable<string> PeriodosHistoricos { get; set; } = new List<string>();
-
-        public bool HasImage { get; set; } = false;
     }
 }
