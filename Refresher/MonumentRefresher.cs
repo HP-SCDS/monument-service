@@ -153,7 +153,8 @@
             List<string> tiposConstruccion = new List<string>();
             if (source.TipoConstruccion != null)
             {
-                string[] splitTipos = source.TipoConstruccion.Split(';');
+                // some construction types have " / " in their values, replace those for ", " for better routing
+                IEnumerable<string> splitTipos = source.TipoConstruccion.Split(';').Select(t => t.Replace(" / ", ", "));
                 tiposConstruccion.AddRange(splitTipos);
             }
 
