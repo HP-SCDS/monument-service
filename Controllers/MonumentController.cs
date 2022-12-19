@@ -176,7 +176,7 @@
         public IEnumerable<Monument> GetByTipoConstruccion(string tipo)
         {
             string decodedType = WebUtility.UrlDecode(tipo); // some of this types have slashes in their names
-            return m_repository.Get(m => StringComparer.CompareInvariantIgnoreCase(m.TipoConstruccion, decodedType));
+            return m_repository.Get(m => StringComparer.ContainsInvariantIgnoreCase(m.TiposConstruccion, decodedType));
         }
 
         [HttpGet("tipo-construccion/{tipo}/base")]

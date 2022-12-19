@@ -150,6 +150,13 @@
                 periodos.AddRange(splitPeriodos);
             }
 
+            List<string> tiposConstruccion = new List<string>();
+            if (source.TipoConstruccion != null)
+            {
+                string[] splitTipos = source.TipoConstruccion.Split(';');
+                tiposConstruccion.AddRange(splitTipos);
+            }
+
             int? bienInteresCultural = null;
             if (int.TryParse(source.IdentificadorBienInteresCultural, out int bienInteresCulturalParsed))
             {
@@ -169,7 +176,7 @@
                 Provincia = source.Poblacion_Provincia,
                 Localizacion = location,
                 TipoMonumento = source.TipoMonumento,
-                TipoConstruccion = source.TipoConstruccion,
+                TiposConstruccion = tiposConstruccion,
                 Clasificacion = source.Clasificacion,
                 PeriodosHistoricos = periodos
             };
@@ -192,7 +199,7 @@
             m_logger.LogInformation($"{tiposMonumentoInserted} tipos monumento added or updated to repository");
 
             int tiposConstruccionInserted = m_facetsRepository.AddOrUpdateTiposConstruccion(monuments
-                .Select(m => m.TipoConstruccion).Where(t => t != null).Cast<string>().Distinct().ToArray());
+                .Where(m => m.TiposConstruccion != null).SelectMany(m => m.TiposConstruccion).Where(p => p != null).Cast<string>().Distinct().ToArray());
             m_logger.LogInformation($"{tiposConstruccionInserted} tipos construccion added or updated to repository");
 
             int clasificacionesInserted = m_facetsRepository.AddOrUpdateClasificaciones(monuments

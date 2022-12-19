@@ -45,8 +45,8 @@
         [JsonPropertyOrder(order : 12)]
         public string? TipoMonumento { get; set; }
 
-        [JsonPropertyOrder(order : 13)]
-        public string? TipoConstruccion { get; set; }
+        [JsonPropertyOrder(order: 13)]
+        public IEnumerable<string> TiposConstruccion { get; set; } = new List<string>();
 
         [JsonPropertyOrder(order : 14)]
         public string? Clasificacion { get; set; }
