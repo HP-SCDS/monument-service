@@ -6,6 +6,7 @@
     using MonumentService.Repository;
     using MonumentService.Util;
     using Swashbuckle.AspNetCore.Annotations;
+    using System.Net;
 
     [ApiController]
     [Route("monuments")]
@@ -174,7 +175,8 @@
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<Monument> GetByTipoConstruccion(string tipo)
         {
-            return m_repository.Get(m => StringComparer.CompareInvariantIgnoreCase(m.TipoConstruccion, tipo));
+            string decodedType = WebUtility.UrlDecode(tipo); // some of this types have slashes in their names
+            return m_repository.Get(m => StringComparer.CompareInvariantIgnoreCase(m.TipoConstruccion, decodedType));
         }
 
         [HttpGet("tipo-construccion/{tipo}/base")]
