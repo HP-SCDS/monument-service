@@ -51,6 +51,19 @@ namespace MonumentService
 
             //app.UseW3CLogging();
 
+            // redirect / to swagger... this might not be the best way but it's the only one I tested that actually WORKS
+            app.Use(async (context, next) =>
+            {
+                string? pathValue = context.Request.Path.Value;
+                if (string.IsNullOrEmpty(pathValue) || pathValue.StartsWith("/index.htm", StringComparison.OrdinalIgnoreCase) || pathValue == "/")
+                {
+                    context.Response.Redirect("/swagger");
+                    return;
+                }
+
+                await next();
+            });
+
             app.MapControllers();
 
             // start images manager and refresher
