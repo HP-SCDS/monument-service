@@ -41,7 +41,7 @@ namespace MonumentService
             app.UseSwaggerUI();
             //}
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             // for this service, allow EVERYTHING so it can be called from any application
             // TODO: test this
